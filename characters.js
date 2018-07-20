@@ -68,3 +68,8 @@ massive({
         console.log('WoW Api Failed! ', err);
     });
 });
+
+setTimeout(function(){
+    console.log('Restarting App...');
+    process.exit(0);
+}, 86400000);
