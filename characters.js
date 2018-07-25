@@ -2,10 +2,11 @@ const massive = require('massive');
 const axios = require('axios');
 const { apikey, postgresql } = require('./config.json');
 
+const now = new Date();
 const wowApi = `https://us.api.battle.net/wow/guild/Thunderlord/Complexity?fields=members%2Cnews&locale=en_US&apikey=${apikey}`;
 let charCount = 0;
 
-console.log('Cron Running');
+console.log(`Ran: ${now}`);
 
 massive({
     host: postgresql.host,
@@ -16,10 +17,6 @@ massive({
     ssl: true
 }).then(db => {
     console.log('PostgreSQL Connection Established');
-
-    db.characters.destroy().then(desErr => {
-        console.log('Characters Table Removed');
-    });
 
     axios.get(wowApi).then(response => {
         console.log('Api Responded');
@@ -36,9 +33,9 @@ massive({
                 const avatarSmall = `http://render-us.worldofwarcraft.com/character/${avatar}`;
                 const avatarMed = `http://render-us.worldofwarcraft.com/character/${avatar.replace('avatar', 'inset')}`;
                 const avatarLarge = `http://render-us.worldofwarcraft.com/character/${avatar.replace('avatar', 'main')}`;
-    
-                db.characters.insert(
-                    {character_name: name,
+                const dataObj = {
+                    id: `${name}${realm}`,
+                    character_name: name,
                     realm: realm,
                     class: clas,
                     race: race,
@@ -52,8 +49,10 @@ massive({
                     spec_background_img: backgroundImage,
                     spec_icon: icon,
                     spec_desc: description,
-                    rank: rank}
-                , (pgError, res) => {
+                    rank: rank};
+    
+
+                db.characters.save(dataObj, (pgError, res) => {
                     console.log(res)
                     if (pgError) {
                         console.log(pgError);
