@@ -13,7 +13,7 @@ let insertCount = 0;
 let updateCount = 0;
 
 //Begin Cron function
-const characterCron = new CronJob('00 00 18 * * 0-6', () => {
+const characterCron = new CronJob('00 00 03 * * 0-6', () => {
     const now = new Date();
     console.log(`Ran: ${now}`);
 
