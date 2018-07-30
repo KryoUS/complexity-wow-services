@@ -17,7 +17,7 @@ CREATE TABLE characters (
     spec_background_img VARCHAR(96),
     spec_icon VARCHAR(96),
     spec_desc TEXT,
-    last_updated VARCHAR(48),
+    last_updated BIGINT,
     stat_health_pots INT,
     stat_mana_pots INT,
     stat_elixirs INT,
