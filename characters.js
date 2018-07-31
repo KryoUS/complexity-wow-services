@@ -11,11 +11,14 @@ const guildApi = `https://us.api.battle.net/wow/guild/Thunderlord/Complexity?fie
 //Counts for Logging
 let insertCount = 0;
 let updateCount = 0;
+let now = new Date();
+
+console.log(`Character Cron Initialized: ${now}`);
 
 //Begin Cron function
-const characterCron = new CronJob('00 00 03 * * 0-6', () => {
-    const now = new Date();
-    console.log(`Ran: ${now}`);
+const characterCron = new CronJob('00 29 10 * * 0-6', () => {
+    now = new Date();
+    console.log(`Character Cron Ran: ${now}`);
 
     //WoW Characters API currently fails if the character's account is no longer active
     let statAPIFail = 0;    
@@ -36,11 +39,13 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
             
             //Define the current time, as Epoch, for the last updated table column
             const dateTime = new Date().getTime();
-            console.log('WoW Guild Api Responded');
-            console.log('Working with tables and WoW Character API...');
+            console.log('WoW Guild Api Responded, now working with tables and WoW Character API...');
 
             //Loop over guild members array
             guildRes.data.members.forEach((obj, i) => {
+
+                //Exclude Characters with an in-game rank of Inactive (6)
+                if (obj.rank <= 5) {
 
                     //Begin Closure Function to ensure the 100 calls a second quota is not reached for the WoW API
                     const upsert = (upsertObj, index) => {
@@ -50,7 +55,6 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
 
                             //Begin WoW Character API call
                             axios.get(statApi).then(statRes => {
-                                
                                 //Blizzard's API had some values that were a max integer for seemingly no reason
                                 //This section will ensure that those erroneous values are not inserted into the database
                                 let personalTeam5v5 = 0;
@@ -69,8 +73,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                 //Begin Object that will be inserted or updated using Massive
                                 let dataObj = {};
 
-                                //If statement used to create two different objects
-                                //One for characters that have a spec object, and one for those who don't
+                                //If statement used to create two different objects, one for characters that have a spec object, and one for those who don't
                                 //This also avoids an issue where characters without a spec object also did not have any render images
                                 if (upsertObj.character.spec) {
                                     //Character has a spec object
@@ -87,6 +90,8 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         race: upsertObj.character.race,
                                         level: upsertObj.character.level,
                                         achievements_pts: upsertObj.character.achievementPoints,
+                                        last_updated: statRes.data.lastModified,
+                                        cron_updated: dateTime,
                                         avatar_small: avatarSmall,
                                         avatar_med: avatarMed,
                                         avatar_large: avatarLarge,
@@ -95,7 +100,6 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         spec_background_img: upsertObj.character.spec.backgroundImage,
                                         spec_icon: upsertObj.character.spec.icon,
                                         spec_desc: upsertObj.character.spec.description,
-                                        last_updated: dateTime,
                                         stat_health_pots: statRes.data.statistics.subCategories[0].subCategories[0].statistics[3].quantity,
                                         stat_mana_pots: statRes.data.statistics.subCategories[0].subCategories[0].statistics[6].quantity,
                                         stat_elixirs: statRes.data.statistics.subCategories[0].subCategories[0].statistics[9].quantity,
@@ -223,7 +227,8 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         race: upsertObj.character.race,
                                         level: upsertObj.character.level,
                                         achievements_pts: upsertObj.character.achievementPoints,
-                                        last_updated: dateTime,
+                                        last_updated: statRes.data.lastModified,
+                                        cron_updated: dateTime,
                                         stat_health_pots: statRes.data.statistics.subCategories[0].subCategories[0].statistics[3].quantity,
                                         stat_mana_pots: statRes.data.statistics.subCategories[0].subCategories[0].statistics[6].quantity,
                                         stat_elixirs: statRes.data.statistics.subCategories[0].subCategories[0].statistics[9].quantity,
@@ -346,6 +351,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                 db.characters.insert(dataObj, {onConflictIgnore: true}).then(response => {
                                     //If there isn't a response, the character already exists and needs to be updated
                                     if (!response) {
+
                                         //Perform Massive update to PostgreSQL
                                         db.characters.update({character_name: upsertObj.character.name, realm: upsertObj.character.realm}, dataObj).then(updateRes => {
                                             //Increment counter for characters updated
@@ -368,6 +374,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                     console.log(insertError);
                                     console.log('---------------------------------------');
                                 });
+                                
                             }).catch(statsError => {
                                 //Increment WoW Character API Failure Counter
                                 statAPIFail++
@@ -386,6 +393,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
 
                     //Run Closure Function
                     upsert(obj, i);
+                }
             });
         }).catch(err => {
             console.log('WoW Guild Api Failed! ', err);
