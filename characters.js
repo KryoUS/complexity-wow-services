@@ -16,7 +16,7 @@ let now = new Date();
 console.log(`Character Cron Initialized: ${now}`);
 
 //Begin Cron function
-const characterCron = new CronJob('00 29 10 * * 0-6', () => {
+const characterCron = new CronJob('00 00 03 * * 0-6', () => {
     now = new Date();
     console.log(`Character Cron Ran: ${now}`);
 
@@ -374,7 +374,7 @@ const characterCron = new CronJob('00 29 10 * * 0-6', () => {
                                     console.log(insertError);
                                     console.log('---------------------------------------');
                                 });
-                                
+
                             }).catch(statsError => {
                                 //Increment WoW Character API Failure Counter
                                 statAPIFail++
