@@ -16,7 +16,7 @@ let now = new Date();
 console.log(`Character Cron Initialized: ${now}`);
 
 //Begin Cron function
-const characterCron = new CronJob('00 00 03 * * 0-6', () => {
+const characterCron = new CronJob('00 19 23 * * 0-6', () => {
     now = new Date();
     console.log(`Character Cron Ran: ${now}`);
 
@@ -51,7 +51,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                     const upsert = (upsertObj, index) => {
                         setTimeout(() => {
                             //Define WoW Character API
-                            const statApi = `https://us.api.battle.net/wow/character/${upsertObj.character.realm}/${upsertObj.character.name}?fields=statistics&locale=en_US&apikey=${apikey}`;
+                            const statApi = `https://us.api.battle.net/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=statistics&locale=en_US&apikey=${apikey}`;
 
                             //Begin WoW Character API call
                             axios.get(statApi).then(statRes => {
