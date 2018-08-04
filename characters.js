@@ -16,7 +16,7 @@ let now = new Date();
 console.log(`Character Cron Initialized: ${now}`);
 
 //Begin Cron function
-const characterCron = new CronJob('00 19 23 * * 0-6', () => {
+const characterCron = new CronJob('00 00 03 * * 0-6', () => {
     now = new Date();
     console.log(`Character Cron Ran: ${now}`);
 
