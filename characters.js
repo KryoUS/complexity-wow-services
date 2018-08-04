@@ -52,6 +52,9 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                         setTimeout(() => {
                             //Define WoW Character API
                             const statApi = `https://us.api.battle.net/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=statistics&locale=en_US&apikey=${apikey}`;
+                            const avatarSmall = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail}?alt=/wow/static/images/2d/avatar/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
+                            const avatarMed = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'inset')}?alt=/wow/static/images/2d/inset/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
+                            const avatarLarge = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'main')}?alt=/wow/static/images/2d/main/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
 
                             //Begin WoW Character API call
                             axios.get(statApi).then(statRes => {
@@ -77,10 +80,6 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                 //This also avoids an issue where characters without a spec object also did not have any render images
                                 if (upsertObj.character.spec) {
                                     //Character has a spec object
-                                    const avatar = upsertObj.character.thumbnail;
-                                    const avatarSmall = `http://render-us.worldofwarcraft.com/character/${avatar}`;
-                                    const avatarMed = `http://render-us.worldofwarcraft.com/character/${avatar.replace('avatar', 'inset')}`;
-                                    const avatarLarge = `http://render-us.worldofwarcraft.com/character/${avatar.replace('avatar', 'main')}`;
                                     dataObj = {
                                         character_name: upsertObj.character.name,
                                         realm: upsertObj.character.realm,
@@ -229,6 +228,9 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         achievements_pts: upsertObj.character.achievementPoints,
                                         last_updated: statRes.data.lastModified,
                                         cron_updated: dateTime,
+                                        avatar_small: avatarSmall,
+                                        avatar_med: avatarMed,
+                                        avatar_large: avatarLarge,
                                         stat_health_pots: statRes.data.statistics.subCategories[0].subCategories[0].statistics[3].quantity,
                                         stat_mana_pots: statRes.data.statistics.subCategories[0].subCategories[0].statistics[6].quantity,
                                         stat_elixirs: statRes.data.statistics.subCategories[0].subCategories[0].statistics[9].quantity,
