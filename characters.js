@@ -48,7 +48,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                 if (obj.rank <= 5) {
 
                     //Begin Closure Function to ensure the 100 calls a second quota is not reached for the WoW API
-                    const upsert = (upsertObj, index) => {
+                    const upsert = (upsertObj, index, rank) => {
                         setTimeout(() => {
                             //Define WoW Character API
                             const statApi = `https://us.api.battle.net/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=statistics&locale=en_US&apikey=${apikey}`;
@@ -73,6 +73,11 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                     personalTeam2v2 = statRes.data.statistics.subCategories[9].subCategories[0].statistics[27].quantity
                                 }
                                 
+                                let raider = 0;
+                                if (rank <= 3 && upsertObj.character.name != 'Theeotown' && upsertObj.character.name != 'Glacial' && upsertObj.character.name != 'Hopelessly' && upsertObj.character.name != 'Tanzia' && upsertObj.character.name != 'Rubyeyes' && upsertObj.character.name != 'Cheezyjr') {
+                                    raider = 1;
+                                }
+
                                 //Begin Object that will be inserted or updated using Massive
                                 let dataObj = {};
 
@@ -91,6 +96,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         achievements_pts: upsertObj.character.achievementPoints,
                                         last_updated: statRes.data.lastModified,
                                         cron_updated: dateTime,
+                                        raider: raider,
                                         avatar_small: avatarSmall,
                                         avatar_med: avatarMed,
                                         avatar_large: avatarLarge,
@@ -228,6 +234,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         achievements_pts: upsertObj.character.achievementPoints,
                                         last_updated: statRes.data.lastModified,
                                         cron_updated: dateTime,
+                                        raider: raider,
                                         avatar_small: avatarSmall,
                                         avatar_med: avatarMed,
                                         avatar_large: avatarLarge,
@@ -394,7 +401,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                     }
 
                     //Run Closure Function
-                    upsert(obj, i);
+                    upsert(obj, i, obj.rank);
                 }
             });
         }).catch(err => {
