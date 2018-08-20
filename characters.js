@@ -51,7 +51,7 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                     const upsert = (upsertObj, index, rank) => {
                         setTimeout(() => {
                             //Define WoW Character API
-                            const statApi = `https://us.api.battle.net/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=statistics&locale=en_US&apikey=${apikey}`;
+                            const statApi = `https://us.api.battle.net/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=items%2Cstatistics&locale=en_US&apikey=${apikey}`;
                             const avatarSmall = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail}?alt=/wow/static/images/2d/avatar/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
                             const avatarMed = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'inset')}?alt=/wow/static/images/2d/inset/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
                             const avatarLarge = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'main')}?alt=/wow/static/images/2d/main/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
@@ -94,6 +94,8 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         race: upsertObj.character.race,
                                         level: upsertObj.character.level,
                                         achievements_pts: upsertObj.character.achievementPoints,
+                                        average_ilvl: statRes.data.items.averageItemLevel,
+                                        average_equipped_ilvl: statRes.data.items.averageItemLevelEquipped,
                                         last_updated: statRes.data.lastModified,
                                         cron_updated: dateTime,
                                         raider: raider,
@@ -232,6 +234,8 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         race: upsertObj.character.race,
                                         level: upsertObj.character.level,
                                         achievements_pts: upsertObj.character.achievementPoints,
+                                        average_ilvl: statRes.data.items.averageItemLevel,
+                                        average_equipped_ilvl: statRes.data.items.averageItemLevelEquipped,
                                         last_updated: statRes.data.lastModified,
                                         cron_updated: dateTime,
                                         raider: raider,
