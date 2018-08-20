@@ -96,6 +96,9 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         achievements_pts: upsertObj.character.achievementPoints,
                                         average_ilvl: statRes.data.items.averageItemLevel,
                                         average_equipped_ilvl: statRes.data.items.averageItemLevelEquipped,
+                                        azerite_lvl: statRes.data.items.neck.azeriteItem ? statRes.data.items.neck.azeriteItem.azeriteLevel : 0,
+                                        azerite_xp: statRes.data.items.neck.azeriteItem ? statRes.data.items.neck.azeriteItem.azeriteExperience : 0,
+                                        azerite_xp_remaining: statRes.data.items.neck.azeriteItem ? statRes.data.items.neck.azeriteItem.azeriteExperienceRemaining : 0,
                                         last_updated: statRes.data.lastModified,
                                         cron_updated: dateTime,
                                         raider: raider,
@@ -236,6 +239,9 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                         achievements_pts: upsertObj.character.achievementPoints,
                                         average_ilvl: statRes.data.items.averageItemLevel,
                                         average_equipped_ilvl: statRes.data.items.averageItemLevelEquipped,
+                                        azerite_lvl: statRes.data.items.neck.azeriteItem ? statRes.data.items.neck.azeriteItem.azeriteLevel : 0,
+                                        azerite_xp: statRes.data.items.neck.azeriteItem ? statRes.data.items.neck.azeriteItem.azeriteExperience : 0,
+                                        azerite_xp_remaining: statRes.data.items.neck.azeriteItem ? statRes.data.items.neck.azeriteItem.azeriteExperienceRemaining : 0,
                                         last_updated: statRes.data.lastModified,
                                         cron_updated: dateTime,
                                         raider: raider,
@@ -396,10 +402,12 @@ const characterCron = new CronJob('00 00 03 * * 0-6', () => {
                                 //There is also a bug with characters that have a special character in their name
                                 console.log('---------------------------------------');
                                 console.log(`Character API Failed (${statAPIFail}) times!`);
-                                console.log(statsError.response.status, statsError.response.statusText);
-                                console.log(statsError.response.config.headers);
-                                console.log(statsError.response.config.url);
+                                statsError.response && console.log(statsError.response.status, statsError.response.statusText);
+                                statsError.response && console.log(statsError.response.config.headers);
+                                statsError.response && console.log(statsError.response.config.url);
+                                !statsError.response && console.log(statsError);
                                 console.log('---------------------------------------');
+
                             });
                         }, index * 250); //Timeout limits the WoW Character API calls to roughly 4 a second to avoid the 100 per second quota
                     }
