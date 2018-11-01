@@ -63,6 +63,7 @@ const characterCron = new CronJob('00 05 0-23 * * 0-6', () => {
                         && obj.character.name !== 'Dawgbreath' 
                         && obj.character.name !== 'Youlldie' 
                         && obj.character.name !== 'Misundrstood'
+                        && obj.character.level >= 20
                     ) {
 
                         setTimeout(() => {
