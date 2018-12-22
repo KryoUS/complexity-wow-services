@@ -23,7 +23,7 @@ const characterCron = new CronJob('00 05 0-23 * * 0-6', () => {
     now = new Date();
     console.log(`Character Cron Ran: ${now}`);
 
-    //WoW Characters API currently fails if the character's account is no longer active
+    //WoW Characters API fail counter
     let statAPIFail = 0; 
 
     //Set a variable for the character's name to help track errors.
@@ -42,8 +42,6 @@ const characterCron = new CronJob('00 05 0-23 * * 0-6', () => {
 
         //Begin WoW Guild API call
         axios.get(guildApi).then(guildRes => {
-            
-            let maxIndex = guildRes.data.members.length;
 
             //Define the current time, as Epoch, for the last updated table column
             const dateTime = new Date().getTime();
@@ -230,9 +228,6 @@ const characterCron = new CronJob('00 05 0-23 * * 0-6', () => {
                                 db.characters.insert(dataObj, {onConflictIgnore: true}).then(response => {
                                     //If there isn't a response, the character already exists and needs to be updated
                                     if (!response) {
-
-                                        //Remove Raider key from object since the logic was decided when the character was first inserted
-                                        delete dataObj.raider;
 
                                         //Perform Massive update to PostgreSQL
                                         db.characters.update({character_name: upsertObj.character.name, realm: upsertObj.character.realm}, dataObj).then(updateRes => {
