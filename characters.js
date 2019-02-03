@@ -1,3 +1,6 @@
+/* THIS CODE NO LONGER WORKS WITH BLIZZARD'S CHANGE TO THEIR API BUT IS KEPT FOR REFERENCE */
+
+
 const massive = require('massive');
 const axios = require('axios');
 const CronJob = require('cron').CronJob;

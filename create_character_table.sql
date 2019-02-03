@@ -9,7 +9,6 @@ CREATE TABLE characters (
     achievements_pts INT,
     last_updated BIGINT,
     cron_updated BIGINT,
-    main INT,
     raider INT,
     avatar_small TEXT,
     avatar_med TEXT,
@@ -134,5 +133,10 @@ CREATE TABLE characters (
     stat_highest_endless_dmg INT ,
     stat_highest_endless_tank INT ,
     stat_highest_endless_heals INT ,
+    average_ilvl INT,
+    average_equipped_ilvl INT,
+    azerite_lvl INT,
+    azerite_xp INT,
+    azerite_xp_remaining INT,
     PRIMARY KEY (character_name, realm)
 );
