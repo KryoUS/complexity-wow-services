@@ -1,15 +1,8 @@
-/* THIS CODE NO LONGER WORKS WITH BLIZZARD'S CHANGE TO THEIR API BUT IS KEPT FOR REFERENCE */
-
-
 const massive = require('massive');
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
-
-//WoW API Key and PostgreSQL Connection Info
-const { apikey, postgresql } = require('./config.json');
-
-//Define WoW Guild API
-const guildApi = `https://us.api.battle.net/wow/guild/Thunderlord/Complexity?fields=members%2Cnews&locale=en_US&apikey=${apikey}`;
+const blizzardAPI = require('./blizzard_api/blizzard_api');
+const getDb = require('./db/db');
 
 //Counts for Logging
 let insertCount = 0;
@@ -18,8 +11,18 @@ let now = new Date();
 
 console.log(`Character Cron Initialized: ${now}`);
 
+blizzardAPI.setBlizzardToken();
+
+//Begin Blizzard API Token Cron
+const blizzardTokenCron = new CronJob('00 0 */1 * * *', () => {
+    blizzardAPI.setBlizzardToken();
+}, null, false, 'America/Denver');
+
 //Begin Cron function
-const characterCron = new CronJob('00 05 0-23 * * 0-6', () => {
+const characterCron = new CronJob('00 45 0-23 * * 0-6', () => {
+
+    const guildApi = `https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${blizzardAPI.getBlizzardToken()}`;
+
     //Counts for Logging
     insertCount = 0;
     updateCount = 0;
@@ -32,16 +35,13 @@ const characterCron = new CronJob('00 05 0-23 * * 0-6', () => {
     //Set a variable for the character's name to help track errors.
     let charName = '';   
 
-    //Begin Massive connection
-    massive({
-        host: postgresql.host,
-        port: postgresql.port,
-        database: postgresql.database,
-        user: postgresql.user,
-        password: postgresql.password,
-        ssl: true
-    }).then(db => {
-        console.log('PostgreSQL Connection Established');
+    //Get Massive connection
+    getDb().then(db => {
+        // don't pass the instance
+        return Promise.resolve();
+    }).then(() => {
+        // retrieve the already-connected instance synchronously
+        const db = getDb();
 
         //Begin WoW Guild API call
         axios.get(guildApi).then(guildRes => {
@@ -69,7 +69,7 @@ const characterCron = new CronJob('00 05 0-23 * * 0-6', () => {
 
                         setTimeout(() => {
                             //Define WoW Character API
-                            const statApi = `https://us.api.battle.net/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=items%2Cstatistics&locale=en_US&apikey=${apikey}`;
+                            const statApi = `https://us.api.blizzard.com/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=items%2C%20statistics&locale=en_US&access_token=${blizzardAPI.getBlizzardToken()}`;
                             const avatarSmall = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail}?alt=/wow/static/images/2d/avatar/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
                             const avatarMed = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'inset')}?alt=/wow/static/images/2d/inset/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
                             const avatarLarge = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'main')}?alt=/wow/static/images/2d/main/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
@@ -281,6 +281,8 @@ const characterCron = new CronJob('00 05 0-23 * * 0-6', () => {
         }).catch(err => {
             console.log('WoW Guild Api Failed! ', err);
         });
+    }).catch(error => {
+        console.log('DB Connection Error: ', error);
     });
 }, 
 null,
@@ -289,4 +291,5 @@ false,
 );
 
 //Starts Cron (This is necessary and the Cron will not run until the specified time)
+blizzardTokenCron.start();
 characterCron.start();

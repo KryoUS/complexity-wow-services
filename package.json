@@ -1,0 +1,25 @@
+{
+  "name": "complexity-character-cron",
+  "version": "1.0.0",
+  "description": "Web Service to collect World of Warcraft Character Statistics and cache them in a PostgreSQL database.",
+  "main": "characters.js",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "cron": "^1.7.1",
+    "massive": "^5.10.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KryoUS/ComplexityCharacterCron.git"
+  },
+  "author": "Michael Hughes",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KryoUS/ComplexityCharacterCron/issues"
+  },
+  "homepage": "https://github.com/KryoUS/ComplexityCharacterCron#readme"
+}
