@@ -1,4 +1,3 @@
-const massive = require('massive');
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
 const blizzardAPI = require('./blizzard_api/blizzard_api');
@@ -11,37 +10,39 @@ let now = new Date();
 
 console.log(`Character Cron Initialized: ${now}`);
 
-blizzardAPI.setBlizzardToken();
+//Get Massive connection
+getDb().then(db => {
+    // don't pass the instance
+    return Promise.resolve();
+}).then(() => {
+    // retrieve the already-connected instance synchronously
+    const db = getDb();
 
-//Begin Blizzard API Token Cron
-const blizzardTokenCron = new CronJob('00 0 */1 * * *', () => {
     blizzardAPI.setBlizzardToken();
-}, null, false, 'America/Denver');
 
-//Begin Cron function
-const characterCron = new CronJob('00 45 0-23 * * 0-6', () => {
+    //Begin Blizzard API Token Cron
+    const blizzardTokenCron = new CronJob('00 0 */1 * * *', () => {
+        blizzardAPI.setBlizzardToken();
+    }, null, false, 'America/Denver');
 
-    const guildApi = `https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${blizzardAPI.getBlizzardToken()}`;
+    //Begin Cron function
+    const characterCron = new CronJob('00 15 0-23 * * 0-6', () => {
 
-    //Counts for Logging
-    insertCount = 0;
-    updateCount = 0;
-    now = new Date();
-    console.log(`Character Cron Ran: ${now}`);
+        const guildApi = `https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${blizzardAPI.getBlizzardToken()}`;
 
-    //WoW Characters API fail counter
-    let statAPIFail = 0; 
+        //Counts for Logging
+        insertCount = 0;
+        updateCount = 0;
+        now = new Date();
+        console.log(`Character Cron Ran: ${now}`);
 
-    //Set a variable for the character's name to help track errors.
-    let charName = '';   
+        //WoW Characters API fail counter
+        let statAPIFail = 0; 
 
-    //Get Massive connection
-    getDb().then(db => {
-        // don't pass the instance
-        return Promise.resolve();
-    }).then(() => {
-        // retrieve the already-connected instance synchronously
-        const db = getDb();
+        //Set a variable for the character's name to help track errors.
+        let charName = '';   
+
+
 
         //Begin WoW Guild API call
         axios.get(guildApi).then(guildRes => {
@@ -281,15 +282,16 @@ const characterCron = new CronJob('00 45 0-23 * * 0-6', () => {
         }).catch(err => {
             console.log('WoW Guild Api Failed! ', err);
         });
-    }).catch(error => {
-        console.log('DB Connection Error: ', error);
-    });
-}, 
-null,
-false,
-'America/Denver'
-);
+    }, 
+    null,
+    false,
+    'America/Denver'
+    );
 
-//Starts Cron (This is necessary and the Cron will not run until the specified time)
-blizzardTokenCron.start();
-characterCron.start();
+    //Starts Cron (This is necessary and the Cron will not run until the specified time)
+    blizzardTokenCron.start();
+    characterCron.start();
+
+}).catch(error => {
+    console.log('DB Connection Error: ', error);
+});
