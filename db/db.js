@@ -1,5 +1,4 @@
 const massive = require('massive');
-const { postgresql } = require('../config.json');
 
 let db;
 
@@ -9,11 +8,11 @@ exports = module.exports = function () {
   }
 
   return massive({
-    host: postgresql.host,
-    port: postgresql.port,
-    database: postgresql.database,
-    user: postgresql.user,
-    password: postgresql.password,
+    host: process.env.PGHOST,
+    port: process.env.PGPORT,
+    database: process.env.PGDATABASE,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
     ssl: true
 }).then(instance => {
     db = instance;

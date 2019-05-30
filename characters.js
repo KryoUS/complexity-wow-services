@@ -1,3 +1,4 @@
+require('dotenv').config();
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
 const blizzardAPI = require('./blizzard_api/blizzard_api');
@@ -26,9 +27,9 @@ getDb().then(db => {
     }, null, false, 'America/Denver');
 
     //Begin Cron function
-    const characterCron = new CronJob('00 15 0-23 * * 0-6', () => {
+    const characterCron = new CronJob('00 13 0-23 * * 0-6', () => {
 
-        const guildApi = `https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${blizzardAPI.getBlizzardToken()}`;
+        const guildApi = `https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`;
 
         //Counts for Logging
         insertCount = 0;
@@ -70,7 +71,7 @@ getDb().then(db => {
 
                         setTimeout(() => {
                             //Define WoW Character API
-                            const statApi = `https://us.api.blizzard.com/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=items%2C%20statistics&locale=en_US&access_token=${blizzardAPI.getBlizzardToken()}`;
+                            const statApi = `https://us.api.blizzard.com/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=items%2C%20statistics&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`;
                             const avatarSmall = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail}?alt=/wow/static/images/2d/avatar/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
                             const avatarMed = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'inset')}?alt=/wow/static/images/2d/inset/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
                             const avatarLarge = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'main')}?alt=/wow/static/images/2d/main/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
