@@ -2,7 +2,6 @@ require('dotenv').config();
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
 const CharacterCronLogging = require('./db/dbLogging');
-const blizzardAPI = require('./blizzard_api/blizzard_api');
 const getDb = require('./db/db');
 
 //Counts for Logging
@@ -21,11 +20,29 @@ getDb().then(db => {
     // retrieve the already-connected instance synchronously
     const db = getDb();
 
-    blizzardAPI.setBlizzardToken();
+    const setBlizzardToken = () => {
+        axios.post(`https://us.battle.net/oauth/token`, 'grant_type=client_credentials', {
+            auth: {
+                username: process.env.BLIZZ_API_CLIENT_ID, 
+                password: process.env.BLIZZ_API_CLIENT_SECRET
+            }
+        }).then(response => {
+            
+            if (process.env.BLIZZ_TOKEN != response.data.access_token) {
+                CharacterCronLogging(db, 'blizzardapi', `New Token acquired, expires in ${response.data.expires_in}.`);
+            } else {
+                CharacterCronLogging(db, 'blizzardapi', `Valid token already present, expires in ${response.data.expires_in}.`);
+            }
+    
+            process.env.BLIZZ_TOKEN = response.data.access_token;
+        }).catch(wowTokenFetchError => {
+            CharacterCronLogging(db, 'blizzardapi', 'API Error', wowTokenFetchError);
+        });
+    };
 
     //Begin Blizzard API Token Cron
     const blizzardTokenCron = new CronJob('00 0 */1 * * *', () => {
-        blizzardAPI.setBlizzardToken();
+        setBlizzardToken();
     }, null, false, 'America/Denver');
 
     //Begin Cron function
@@ -302,6 +319,7 @@ getDb().then(db => {
     );
 
     //Starts Cron (This is necessary and the Cron will not run until the specified time)
+    setBlizzardToken();
     blizzardTokenCron.start();
     characterCron.start();
 
