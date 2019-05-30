@@ -1,4 +1,5 @@
 const axios = require('axios');
+const CharacterCronLogging = require('../db/dbLogging');
 
 module.exports = {
     setBlizzardToken: () => {
@@ -8,15 +9,17 @@ module.exports = {
                 password: process.env.BLIZZ_API_CLIENT_SECRET
             }
         }).then(response => {
-            console.log('Token Acquired');
-            blizzardToken = response.data.access_token;
+            
+            if (process.env.BLIZZ_TOKEN != response.data.access_token) {
+                CharacterCronLogging(db, 'blizzardapi', `New Token acquired, expires in ${Math.floor((response.data.expires_in / (1000 * 60)) % 60)} minutes.`);
+            } else {
+                CharacterCronLogging(db, 'blizzardapi', `Valid token already present, expires in ${Math.floor((response.data.expires_in / (1000 * 60)) % 60)} minutes.`);
+            }
+
+            process.env.BLIZZ_TOKEN = response.data.access_token;
         }).catch(wowTokenFetchError => {
-            console.log('WoW API Token Fetch Error: ', wowTokenFetchError);
+            CharacterCronLogging(db, 'blizzardapi', 'API Error', wowTokenFetchError);
         });
     },
-
-    getBlizzardToken: () => {
-        return blizzardToken;
-    }
 
 }

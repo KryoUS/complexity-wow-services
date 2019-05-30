@@ -1,6 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
+const CharacterCronLogging = require('./db/dbLogging');
 const blizzardAPI = require('./blizzard_api/blizzard_api');
 const getDb = require('./db/db');
 
@@ -9,10 +10,11 @@ let insertCount = 0;
 let updateCount = 0;
 let now = new Date();
 
-console.log(`Character Cron Initialized: ${now}`);
-
 //Get Massive connection
 getDb().then(db => {
+    //Log Database Connection
+    CharacterCronLogging(db, 'database', 'Database Connected');
+
     // don't pass the instance
     return Promise.resolve();
 }).then(() => {
@@ -29,13 +31,17 @@ getDb().then(db => {
     //Begin Cron function
     const characterCron = new CronJob('00 13 0-23 * * 0-6', () => {
 
+        if (process.env.BLIZZ_TOKEN = '') {
+            CharacterCronLogging(db, 'system', 'Blizzard API Token not present, character cron skipped.');
+            return
+        }
+
         const guildApi = `https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`;
 
         //Counts for Logging
         insertCount = 0;
         updateCount = 0;
         now = new Date();
-        console.log(`Character Cron Ran: ${now}`);
 
         //WoW Characters API fail counter
         let statAPIFail = 0; 
@@ -43,14 +49,13 @@ getDb().then(db => {
         //Set a variable for the character's name to help track errors.
         let charName = '';   
 
-
-
         //Begin WoW Guild API call
         axios.get(guildApi).then(guildRes => {
 
+            CharacterCronLogging(db, 'blizzardapi', 'Complexity Guild Members acquired.');
+
             //Define the current time, as Epoch, for the last updated table column
             const dateTime = new Date().getTime();
-            console.log('WoW Guild Api Responded, now working with tables and WoW Character API...');
 
             //Loop over guild members array
             guildRes.data.members.forEach((obj, i) => {
@@ -236,26 +241,39 @@ getDb().then(db => {
 
                                         //Perform Massive update to PostgreSQL
                                         db.characters.update({character_name: upsertObj.character.name, realm: upsertObj.character.realm}, dataObj).then(updateRes => {
+
+                                            //Log to database the updated character.
+                                            CharacterCronLogging(db, 'database', `Updated ${dataObj.character_name} of ${dataObj.realm}.`);
+
                                             //Increment counter for characters updated
                                             updateCount++
 
                                         }).catch(updateError => {
-                                            console.log('---------------------------------------');
-                                            console.log('Massive Update Error!');
-                                            console.log(dataObj);
-                                            console.log(updateError);
-                                            console.log('---------------------------------------');
+                                            let dbUpdateError = {};
+                                            dbUpdateError.dbError = updateError;
+                                            dbUpdateError.dataObject = dataObj;
+
+                                            //Log to database an error in updating a character.
+                                            CharacterCronLogging(db, 'database', `Error updating ${dataObj.character_name} of ${dataObj.realm}.`, dbUpdateError);
+
                                         });
                                     } else {
+
+                                        //Log to database the updated character.
+                                        CharacterCronLogging(db, 'database', `Inserted ${dataObj.character_name} of ${dataObj.realm}.`);
+
                                         //Increment counter for characters inserted
                                         insertCount++
                                     }
                                 }).catch(insertError => {
-                                    console.log('---------------------------------------');
-                                    console.log('Massive Insert Error!');
-                                    console.log(dataObj);
-                                    console.log(insertError);
-                                    console.log('---------------------------------------');
+
+                                    let dbInsertError = {};
+                                    dbInsertError.dbError = insertError;
+                                    dbInsertError.dataObject = dataObj;
+
+                                    //Log to database an error in updating a character.
+                                    CharacterCronLogging(db, 'database', `Error inserting ${dataObj.character_name} of ${dataObj.realm}.`, dbInsertError);
+
                                 });
 
                             }).catch(statsError => {
@@ -264,13 +282,7 @@ getDb().then(db => {
 
                                 //The WoW Character API will fail if the character's account is not active
                                 //There is also a bug with characters that have a special character in their name
-                                console.log('---------------------------------------');
-                                console.log(`Character API Failed (${statAPIFail}) times!`);
-                                statsError.response && console.log(statsError.response.status, statsError.response.statusText);
-                                statsError.response && console.log(statsError.response.config.url);
-                                !statsError.response && console.log(charName);
-                                !statsError.response && console.log(statsError);
-                                console.log('---------------------------------------');
+                                CharacterCronLogging(db, 'blizzardapi', `Blizzard Character API failed ${statAPIFail} time(s). Character ${upsertObj.character.name} of ${upsertObj.character.realm} not found.`, statsError);
 
                             });
                         }, index * 500); //Timeout limits the WoW Character API calls to roughly 2 a second to avoid the 100 per second quota and Heroku Connection limits
@@ -281,7 +293,7 @@ getDb().then(db => {
                 upsert(obj, i, obj.rank);
             });
         }).catch(err => {
-            console.log('WoW Guild Api Failed! ', err);
+            CharacterCronLogging(db, 'blizzardapi', 'Guild Member API error.', err);
         });
     }, 
     null,
