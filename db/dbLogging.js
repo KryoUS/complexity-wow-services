@@ -8,6 +8,6 @@ module.exports = (db, category, message, errorJSON) => {
     }).then(result => {
         //Do nothing with results
     }).catch(error => {
-        console.log(`${new Date()} Massive.js DiscordBotLogging Insert Error = `, error);
+        console.log(`${new Date()} Massive.js CharacterCronLogging Insert Error = `, error);
     })
 };

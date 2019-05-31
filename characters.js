@@ -9,6 +9,21 @@ let insertCount = 0;
 let updateCount = 0;
 let now = new Date();
 
+//Function to remove Circular Object references
+const getCircularReplacer = () => {
+    const seen = new WeakSet();
+
+    return (key, value) => {
+        if (typeof value === "object" && value !== null) {
+            if (seen.has(value)) {
+                return;
+            }
+            seen.add(value);
+        }
+        return value;
+    };
+};
+
 //Get Massive connection
 getDb().then(db => {
     //Log Database Connection
@@ -36,7 +51,7 @@ getDb().then(db => {
     
             process.env.BLIZZ_TOKEN = response.data.access_token;
         }).catch(wowTokenFetchError => {
-            CharacterCronLogging(db, 'blizzardapi', 'API Error', wowTokenFetchError);
+            CharacterCronLogging(db, 'blizzardapi', 'API Error', JSON.stringify(wowTokenFetchError, getCircularReplacer()));
         });
     };
 
@@ -271,7 +286,7 @@ getDb().then(db => {
                                             dbUpdateError.dataObject = dataObj;
 
                                             //Log to database an error in updating a character.
-                                            CharacterCronLogging(db, 'database', `Error updating ${dataObj.character_name} of ${dataObj.realm}.`, dbUpdateError);
+                                            CharacterCronLogging(db, 'database', `Error updating ${dataObj.character_name} of ${dataObj.realm}.`, JSON.stringify(dbUpdateError, getCircularReplacer()));
 
                                         });
                                     } else {
@@ -289,7 +304,7 @@ getDb().then(db => {
                                     dbInsertError.dataObject = dataObj;
 
                                     //Log to database an error in updating a character.
-                                    CharacterCronLogging(db, 'database', `Error inserting ${dataObj.character_name} of ${dataObj.realm}.`, dbInsertError);
+                                    CharacterCronLogging(db, 'database', `Error inserting ${dataObj.character_name} of ${dataObj.realm}.`, JSON.stringify(dbInsertError, getCircularReplacer()));
 
                                 });
 
@@ -299,7 +314,7 @@ getDb().then(db => {
 
                                 //The WoW Character API will fail if the character's account is not active
                                 //There is also a bug with characters that have a special character in their name
-                                CharacterCronLogging(db, 'blizzardapi', `Blizzard Character API failed ${statAPIFail} time(s). Character ${upsertObj.character.name} of ${upsertObj.character.realm} not found.`, statsError);
+                                CharacterCronLogging(db, 'blizzardapi', `Blizzard Character API failed ${statAPIFail} time(s). Character ${upsertObj.character.name} of ${upsertObj.character.realm} not found.`, JSON.stringify(statsError, getCircularReplacer()));
 
                             });
                         }, index * 500); //Timeout limits the WoW Character API calls to roughly 2 a second to avoid the 100 per second quota and Heroku Connection limits
@@ -310,7 +325,7 @@ getDb().then(db => {
                 upsert(obj, i, obj.rank);
             });
         }).catch(err => {
-            CharacterCronLogging(db, 'blizzardapi', 'Guild Member API error.', err);
+            CharacterCronLogging(db, 'blizzardapi', 'Guild Member API error.', JSON.stringify(err, getCircularReplacer()));
         });
     }, 
     null,
