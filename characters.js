@@ -63,12 +63,10 @@ getDb().then(db => {
     //Begin Cron function
     const characterCron = new CronJob('00 13 0-23 * * 0-6', () => {
 
-        if (process.env.BLIZZ_TOKEN = '') {
+        if (process.env.BLIZZ_TOKEN === '') {
             CharacterCronLogging(db, 'system', 'Blizzard API Token not present, character cron skipped.');
             return
         }
-
-        const guildApi = `https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`;
 
         //Counts for Logging
         insertCount = 0;
@@ -82,7 +80,7 @@ getDb().then(db => {
         let charName = '';   
 
         //Begin WoW Guild API call
-        axios.get(guildApi).then(guildRes => {
+        axios.get(`https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(guildRes => {
 
             CharacterCronLogging(db, 'blizzardapi', 'Complexity Guild Members acquired.');
 
@@ -108,13 +106,12 @@ getDb().then(db => {
 
                         setTimeout(() => {
                             //Define WoW Character API
-                            const statApi = `https://us.api.blizzard.com/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=items%2C%20statistics&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`;
-                            const avatarSmall = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail}?alt=/wow/static/images/2d/avatar/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
-                            const avatarMed = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'inset')}?alt=/wow/static/images/2d/inset/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
-                            const avatarLarge = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'main')}?alt=/wow/static/images/2d/main/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
+                            let avatarSmall = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail}?alt=/wow/static/images/2d/avatar/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
+                            let avatarMed = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'inset')}?alt=/wow/static/images/2d/inset/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
+                            let avatarLarge = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'main')}?alt=/wow/static/images/2d/main/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
 
                             //Begin WoW Character API call
-                            axios.get(statApi).then(statRes => {
+                            axios.get(`https://us.api.blizzard.com/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=items%2C%20statistics&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(statRes => {
                                 //Set current character name for better error tracking
                                 charName = statRes.data.name;
                                 
