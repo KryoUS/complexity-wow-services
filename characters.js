@@ -85,7 +85,7 @@ getDb().then(db => {
             CharacterCronLogging(db, 'blizzardapi', 'Complexity Guild Members acquired.');
 
             //Define the current time, as Epoch, for the last updated table column
-            const dateTime = new Date().getTime();
+            let dateTime = new Date().getTime();
 
             //Loop over guild members array
             guildRes.data.members.forEach((obj, i) => {
@@ -330,10 +330,29 @@ getDb().then(db => {
     'America/Denver'
     );
 
+    const characterCleanupCron = new CronJob('00 23 0-23 * * 0-6', () => {
+
+        CharacterCronLogging(db, 'database', 'Guild Member Cleanup Started');
+
+        let cutoffDate = new Date().getTime() - 7200000;
+
+        db.characters.destroy({"cron_updated <": cutoffDate}).then(delResponse => {
+            CharacterCronLogging(db, 'database', `${delResponse.length} character(s) removed.`, JSON.stringify(delResponse, getCircularReplacer()));
+        }).catch(delError => {
+            CharacterCronLogging(db, 'database', 'Guild Member Cleanup error.', JSON.stringify(delError, getCircularReplacer()));
+        });
+
+    }, 
+    null,
+    false,
+    'America/Denver'
+    );
+
     //Starts Cron (This is necessary and the Cron will not run until the specified time)
     setBlizzardToken();
     blizzardTokenCron.start();
     characterCron.start();
+    characterCleanupCron.start();
 
 }).catch(error => {
     console.log('DB Connection Error: ', error);
