@@ -4,11 +4,6 @@ const CronJob = require('cron').CronJob;
 const CharacterCronLogging = require('./db/dbLogging');
 const getDb = require('./db/db');
 
-//Counts for Logging
-let insertCount = 0;
-let updateCount = 0;
-let now = new Date();
-
 //Function to remove Circular Object references
 const getCircularReplacer = () => {
     const seen = new WeakSet();
@@ -68,16 +63,8 @@ getDb().then(db => {
             return
         }
 
-        //Counts for Logging
-        insertCount = 0;
-        updateCount = 0;
-        now = new Date();
-
         //WoW Characters API fail counter
         let statAPIFail = 0; 
-
-        //Set a variable for the character's name to help track errors.
-        let charName = '';   
 
         //Begin WoW Guild API call
         axios.get(`https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(guildRes => {
@@ -87,24 +74,29 @@ getDb().then(db => {
             //Define the current time, as Epoch, for the last updated table column
             let dateTime = new Date().getTime();
 
+            let memberCount = guildRes.data.members.length;
+            let updatedMembers = [];
+            let insertedMembers = [];
+            let skippedMembers = [];
+
             //Loop over guild members array
             guildRes.data.members.forEach((obj, i) => {
 
                 //Begin Closure Function to ensure the 100 calls a second quota is not reached for the WoW API
                 const upsert = (upsertObj, index, rank) => {
 
-                    //Exclude Characters with an in-game rank of Inactive (6) and characters that are ghosts in the wow character api
-                    if (obj.rank <= 5 
-                        && obj.character.name !== 'Judgnjury' 
-                        && obj.character.name !== 'Reaperdgrim' 
-                        && obj.character.name !== 'Luckydawg' 
-                        && obj.character.name !== 'Dawgbreath' 
-                        && obj.character.name !== 'Youlldie' 
-                        && obj.character.name !== 'Misundrstood'
-                        && obj.character.level >= 20
-                    ) {
+                    setTimeout(() => {
 
-                        setTimeout(() => {
+                        //Exclude Characters with an in-game rank of Inactive (6) and characters that are ghosts in the wow character api
+                        if (obj.rank <= 5 
+                            && obj.character.name !== 'Judgnjury' 
+                            && obj.character.name !== 'Reaperdgrim' 
+                            && obj.character.name !== 'Luckydawg' 
+                            && obj.character.name !== 'Dawgbreath' 
+                            && obj.character.name !== 'Youlldie' 
+                            && obj.character.name !== 'Misundrstood'
+                            && obj.character.level >= 20
+                        ) {
                             //Define WoW Character API
                             let avatarSmall = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail}?alt=/wow/static/images/2d/avatar/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
                             let avatarMed = `https://render-us.worldofwarcraft.com/character/${upsertObj.character.thumbnail.replace('avatar', 'inset')}?alt=/wow/static/images/2d/inset/${upsertObj.character.race}-${upsertObj.character.gender}.jpg`;
@@ -112,8 +104,6 @@ getDb().then(db => {
 
                             //Begin WoW Character API call
                             axios.get(`https://us.api.blizzard.com/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=items%2C%20statistics&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(statRes => {
-                                //Set current character name for better error tracking
-                                charName = statRes.data.name;
                                 
                                 let raider = 0;
                                 if (rank <= 3 && upsertObj.character.name != 'Theeotown' && upsertObj.character.name != 'Glacial' && upsertObj.character.name != 'Hopelessly' && upsertObj.character.name != 'Tanzia' && upsertObj.character.name != 'Rubyeyes' && upsertObj.character.name != 'Cheezyjr') {
@@ -271,11 +261,8 @@ getDb().then(db => {
                                         //Perform Massive update to PostgreSQL
                                         db.characters.update({character_name: upsertObj.character.name, realm: upsertObj.character.realm}, dataObj).then(updateRes => {
 
-                                            //Log to database the updated character.
-                                            CharacterCronLogging(db, 'database', `Updated ${dataObj.character_name} of ${dataObj.realm}.`);
-
-                                            //Increment counter for characters updated
-                                            updateCount++
+                                            //Add character as an updated character to the array for logging later
+                                            updatedMembers.push({name: dataObj.character_name, realm: dataObj.realm});
 
                                         }).catch(updateError => {
                                             let dbUpdateError = {};
@@ -288,11 +275,8 @@ getDb().then(db => {
                                         });
                                     } else {
 
-                                        //Log to database the updated character.
-                                        CharacterCronLogging(db, 'database', `Inserted ${dataObj.character_name} of ${dataObj.realm}.`);
-
-                                        //Increment counter for characters inserted
-                                        insertCount++
+                                        //Add character as an inserted character to the array for logging later
+                                        insertedMembers.push({name: dataObj.character_name, realm: dataObj.realm});
                                     }
                                 }).catch(insertError => {
 
@@ -314,8 +298,22 @@ getDb().then(db => {
                                 CharacterCronLogging(db, 'blizzardapi', `Blizzard Character API failed ${statAPIFail} time(s). Character ${upsertObj.character.name} of ${upsertObj.character.realm} not found.`, JSON.stringify(statsError, getCircularReplacer()));
 
                             });
-                        }, index * 500); //Timeout limits the WoW Character API calls to roughly 2 a second to avoid the 100 per second quota and Heroku Connection limits
-                    }
+                        } else {
+                            skippedMembers.push({name: obj.character.name, realm: obj.character.realm, rank: obj.rank});
+                        }
+
+                        if (skippedMembers.length + updatedMembers.length + insertedMembers.length === memberCount) {
+                            CharacterCronLogging(
+                                db, 
+                                'database', 
+                                `${updatedMembers.length} character(s) updated. ${insertedMembers.length} character(s) inserted. ${skippedMembers.length} character(s) skipped.`, 
+                                JSON.stringify(
+                                    {membersUpdated: updatedMembers, membersInserted: insertedMembers, membersSkipped: skippedMembers}, 
+                                    getCircularReplacer()
+                                )
+                            );
+                        }
+                    }, index * 500); //Timeout limits the WoW Character API calls to roughly 2 a second to avoid the 100 per second quota and Heroku Connection limits
                 }
 
                 //Run Closure Function
