@@ -4,21 +4,6 @@ const CronJob = require('cron').CronJob;
 const CharacterCronLogging = require('./db/dbLogging');
 const getDb = require('./db/db');
 
-//Function to remove Circular Object references
-const getCircularReplacer = () => {
-    const seen = new WeakSet();
-
-    return (key, value) => {
-        if (typeof value === "object" && value !== null) {
-            if (seen.has(value)) {
-                return;
-            }
-            seen.add(value);
-        }
-        return value;
-    };
-};
-
 //Get Massive connection
 getDb().then(db => {
     //Log Database Connection
@@ -46,7 +31,7 @@ getDb().then(db => {
     
             process.env.BLIZZ_TOKEN = response.data.access_token;
         }).catch(wowTokenFetchError => {
-            CharacterCronLogging(db, 'blizzardapi', 'API Error', JSON.stringify(wowTokenFetchError, getCircularReplacer()));
+            CharacterCronLogging(db, 'blizzardapi', 'API Error', wowTokenFetchError);
         });
     };
 
@@ -270,7 +255,7 @@ getDb().then(db => {
                                             dbUpdateError.dataObject = dataObj;
 
                                             //Log to database an error in updating a character.
-                                            CharacterCronLogging(db, 'database', `Error updating ${dataObj.character_name} of ${dataObj.realm}.`, JSON.stringify(dbUpdateError, getCircularReplacer()));
+                                            CharacterCronLogging(db, 'database', `Error updating ${dataObj.character_name} of ${dataObj.realm}.`, dbUpdateError);
 
                                         });
                                     } else {
@@ -285,7 +270,7 @@ getDb().then(db => {
                                     dbInsertError.dataObject = dataObj;
 
                                     //Log to database an error in updating a character.
-                                    CharacterCronLogging(db, 'database', `Error inserting ${dataObj.character_name} of ${dataObj.realm}.`, JSON.stringify(dbInsertError, getCircularReplacer()));
+                                    CharacterCronLogging(db, 'database', `Error inserting ${dataObj.character_name} of ${dataObj.realm}.`, dbInsertError);
 
                                 });
 
@@ -307,10 +292,7 @@ getDb().then(db => {
                                 db, 
                                 'database', 
                                 `${updatedMembers.length} character(s) updated. ${insertedMembers.length} character(s) inserted. ${skippedMembers.length} character(s) skipped.`, 
-                                JSON.stringify(
-                                    {membersUpdated: updatedMembers, membersInserted: insertedMembers, membersSkipped: skippedMembers}, 
-                                    getCircularReplacer()
-                                )
+                                {membersUpdated: updatedMembers, membersInserted: insertedMembers, membersSkipped: skippedMembers}
                             );
                         }
                     }, index * 500); //Timeout limits the WoW Character API calls to roughly 2 a second to avoid the 100 per second quota and Heroku Connection limits
@@ -320,7 +302,7 @@ getDb().then(db => {
                 upsert(obj, i, obj.rank);
             });
         }).catch(err => {
-            CharacterCronLogging(db, 'blizzardapi', 'Guild Member API error.', JSON.stringify(err, getCircularReplacer()));
+            CharacterCronLogging(db, 'blizzardapi', 'Guild Member API error.', err);
         });
     }, 
     null,
@@ -335,9 +317,9 @@ getDb().then(db => {
         let cutoffDate = new Date().getTime() - 7200000;
 
         db.characters.destroy({"cron_updated <": cutoffDate}).then(delResponse => {
-            CharacterCronLogging(db, 'database', `${delResponse.length} character(s) removed.`, JSON.stringify(delResponse, getCircularReplacer()));
+            CharacterCronLogging(db, 'database', `${delResponse.length} character(s) removed.`, delResponse);
         }).catch(delError => {
-            CharacterCronLogging(db, 'database', 'Guild Member Cleanup error.', JSON.stringify(delError, getCircularReplacer()));
+            CharacterCronLogging(db, 'database', 'Guild Member Cleanup error.', delError);
         });
 
     }, 
