@@ -168,5 +168,5 @@ module.exports = {
         }).catch(reportError => {
             ServicesLogging(db, 'simulationcraft', `Report fetch error.`, reportError);
         });
-    }, null, false, 'America/Denver', null, true),
+    }, null, true, 'America/Denver', null, false),
 };
