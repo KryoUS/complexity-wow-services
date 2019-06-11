@@ -1,50 +1,12 @@
-require('dotenv').config();
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
-const CharacterCronLogging = require('./db/dbLogging');
-const getDb = require('./db/db');
+const ServicesLogging = require('../db/dbLogging');
 
-//Get Massive connection
-getDb().then(db => {
-    //Log Database Connection
-    CharacterCronLogging(db, 'database', 'Database Connected');
-
-    // don't pass the instance
-    return Promise.resolve();
-}).then(() => {
-    // retrieve the already-connected instance synchronously
-    const db = getDb();
-
-    const setBlizzardToken = () => {
-        axios.post(`https://us.battle.net/oauth/token`, 'grant_type=client_credentials', {
-            auth: {
-                username: process.env.BLIZZ_API_CLIENT_ID, 
-                password: process.env.BLIZZ_API_CLIENT_SECRET
-            }
-        }).then(response => {
-            
-            if (process.env.BLIZZ_TOKEN != response.data.access_token) {
-                CharacterCronLogging(db, 'blizzardapi', `New Token acquired, expires in ${response.data.expires_in}.`);
-            } else {
-                CharacterCronLogging(db, 'blizzardapi', `Valid token already present, expires in ${response.data.expires_in}.`);
-            }
-    
-            process.env.BLIZZ_TOKEN = response.data.access_token;
-        }).catch(wowTokenFetchError => {
-            CharacterCronLogging(db, 'blizzardapi', 'API Error', wowTokenFetchError);
-        });
-    };
-
-    //Begin Blizzard API Token Cron
-    const blizzardTokenCron = new CronJob('00 0 */1 * * *', () => {
-        setBlizzardToken();
-    }, null, false, 'America/Denver');
-
-    //Begin Cron function
-    const characterCron = new CronJob('00 13 0-23 * * 0-6', () => {
+module.exports = {
+    get: (db) => new CronJob('00 13 0-23 * * 0-6', () => {
 
         if (process.env.BLIZZ_TOKEN === '') {
-            CharacterCronLogging(db, 'system', 'Blizzard API Token not present, character cron skipped.');
+            ServicesLogging(db, 'system', 'Blizzard API Token not present, character cron skipped.');
             return
         }
 
@@ -54,7 +16,7 @@ getDb().then(db => {
         //Begin WoW Guild API call
         axios.get(`https://us.api.blizzard.com/wow/guild/thunderlord/complexity?fields=members&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(guildRes => {
 
-            CharacterCronLogging(db, 'blizzardapi', 'Complexity Guild Members acquired.');
+            ServicesLogging(db, 'blizzardapi', 'Complexity Guild Members acquired.');
 
             //Define the current time, as Epoch, for the last updated table column
             let dateTime = new Date().getTime();
@@ -255,7 +217,7 @@ getDb().then(db => {
                                             dbUpdateError.dataObject = dataObj;
 
                                             //Log to database an error in updating a character.
-                                            CharacterCronLogging(db, 'database', `Error updating ${dataObj.character_name} of ${dataObj.realm}.`, dbUpdateError);
+                                            ServicesLogging(db, 'database', `Error updating ${dataObj.character_name} of ${dataObj.realm}.`, dbUpdateError);
 
                                         });
                                     } else {
@@ -270,7 +232,7 @@ getDb().then(db => {
                                     dbInsertError.dataObject = dataObj;
 
                                     //Log to database an error in updating a character.
-                                    CharacterCronLogging(db, 'database', `Error inserting ${dataObj.character_name} of ${dataObj.realm}.`, dbInsertError);
+                                    ServicesLogging(db, 'database', `Error inserting ${dataObj.character_name} of ${dataObj.realm}.`, dbInsertError);
 
                                 });
 
@@ -280,7 +242,7 @@ getDb().then(db => {
 
                                 //The WoW Character API will fail if the character's account is not active
                                 //There is also a bug with characters that have a special character in their name
-                                CharacterCronLogging(db, 'blizzardapi', `Blizzard Character API failed ${statAPIFail} time(s). Character ${upsertObj.character.name} of ${upsertObj.character.realm} not found.`, JSON.stringify(statsError, getCircularReplacer()));
+                                ServicesLogging(db, 'blizzardapi', `Blizzard Character API failed ${statAPIFail} time(s). Character ${upsertObj.character.name} of ${upsertObj.character.realm} not found.`, JSON.stringify(statsError, getCircularReplacer()));
 
                             });
                         } else {
@@ -288,7 +250,7 @@ getDb().then(db => {
                         }
 
                         if (skippedMembers.length + updatedMembers.length + insertedMembers.length === memberCount) {
-                            CharacterCronLogging(
+                            ServicesLogging(
                                 db, 
                                 'database', 
                                 `${updatedMembers.length} character(s) updated. ${insertedMembers.length} character(s) inserted. ${skippedMembers.length} character(s) skipped.`, 
@@ -302,38 +264,29 @@ getDb().then(db => {
                 upsert(obj, i, obj.rank);
             });
         }).catch(err => {
-            CharacterCronLogging(db, 'blizzardapi', 'Guild Member API error.', err);
+            ServicesLogging(db, 'blizzardapi', 'Guild Member API error.', err);
         });
     }, 
     null,
-    false,
+    true,
     'America/Denver'
-    );
+    ),
 
-    const characterCleanupCron = new CronJob('00 23 0-23 * * 0-6', () => {
+    cleanup: (db) => new CronJob('00 23 0-23 * * 0-6', () => {
 
-        CharacterCronLogging(db, 'database', 'Guild Member Cleanup Started');
+        ServicesLogging(db, 'database', 'Guild Member Cleanup Started');
 
         let cutoffDate = new Date().getTime() - 7200000;
 
         db.characters.destroy({"cron_updated <": cutoffDate}).then(delResponse => {
-            CharacterCronLogging(db, 'database', `${delResponse.length} character(s) removed.`, delResponse);
+            ServicesLogging(db, 'database', `${delResponse.length} character(s) removed.`, delResponse);
         }).catch(delError => {
-            CharacterCronLogging(db, 'database', 'Guild Member Cleanup error.', delError);
+            ServicesLogging(db, 'database', 'Guild Member Cleanup error.', delError);
         });
 
     }, 
     null,
     false,
     'America/Denver'
-    );
-
-    //Starts Cron (This is necessary and the Cron will not run until the specified time)
-    setBlizzardToken();
-    blizzardTokenCron.start();
-    characterCron.start();
-    characterCleanupCron.start();
-
-}).catch(error => {
-    console.log('DB Connection Error: ', error);
-});
+    ),
+}

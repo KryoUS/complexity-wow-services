@@ -1,8 +1,8 @@
-CREATE TABLE CharacterCronLog (
+CREATE TABLE ServicesLog (
 	id SERIAL PRIMARY KEY,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	epoch_datetime BIGINT,
 	category TEXT,
 	message TEXT,
-	error jsonb NOT NULL DEFAULT '{}'
+	info jsonb NOT NULL DEFAULT '{}'
 )

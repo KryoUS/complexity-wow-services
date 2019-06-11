@@ -9,4 +9,4 @@ RUN npm install
 # Copy app
 COPY . .
 # Run index.js
-CMD ["node", "characters.js"]
+CMD ["node", "index.js"]
