@@ -147,7 +147,8 @@ module.exports = {
                 axios.get(`https://www.simulationcraft.org/reports/PR_Raid.txt`).then(pubRealmRes => {
                     let publicRealm = simArray(pubRealmRes.data).filter(Boolean);
 
-                    db.saveDoc('wowcache', {
+                    db.wowcache.saveDoc({
+                        id: 3,
                         cacheType: 'simulationcraft',
                         publicRealm: publicRealm[1],
                         currentTier: currentTier[1],
@@ -168,5 +169,5 @@ module.exports = {
         }).catch(reportError => {
             ServicesLogging(db, 'simulationcraft', `Report fetch error.`, reportError);
         });
-    }, null, true, 'America/Denver', null, false),
+    }, null, true, 'America/Denver', null, true),
 };
