@@ -148,7 +148,7 @@ module.exports = {
                     let publicRealm = simArray(pubRealmRes.data).filter(Boolean);
 
                     db.wowcache.saveDoc({
-                        id: 3,
+                        id: 9,
                         cacheType: 'simulationcraft',
                         publicRealm: publicRealm[1],
                         currentTier: currentTier[1],

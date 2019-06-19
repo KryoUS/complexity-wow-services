@@ -3,7 +3,8 @@ const ServicesLogging = require('./db/dbLogging');
 const getDb = require('./db/db');
 const blizzardApi = require('./services/token');
 const simulationcraft = require('./services/simulationcraft');
-const characters = require('./services/characters');
+const wowGuildCharacters = require('./services/characters');
+const wow = require('./services/wow/dataResources');
 
 //Get Massive connection
 getDb().then(db => {
@@ -18,11 +19,17 @@ getDb().then(db => {
 
     //Starts Cron (This is necessary and the Cron will not run until the specified time)
     blizzardApi.setBlizzardToken(db);
-    characters.get(db);
-    characters.cleanup(db);
+    wowGuildCharacters.get(db);
+    wowGuildCharacters.cleanup(db);
     simulationcraft.get(db);
-    // characterCron.start();
-    // characterCleanupCron.start();
+    wow.getAchievements(db);
+    wow.getBattlegroups(db);
+    wow.getBosses(db);
+    wow.getClasses(db);
+    wow.getMounts(db);
+    wow.getPetTypes(db);
+    wow.getPets(db);
+    wow.getRaces(db);    
 
 }).catch(error => {
     console.log('DB Connection Error: ', error);
