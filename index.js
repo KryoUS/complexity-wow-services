@@ -8,6 +8,7 @@ const wow = require('./services/wow/dataResources');
 const blizztrack = require('./services/wow/blizztrack');
 const raiderIO = require('./services/wow/raiderio');
 const wowProgress = require('./services/wow/wowProgress');
+const breakingNews = require('./services/wow/breakingNews');
 
 //Get Massive connection
 getDb().then(db => {
@@ -34,12 +35,12 @@ getDb().then(db => {
     wow.getPets(db);
     wow.getRaces(db);
     blizztrack.getBluePosts(db);
-    blizztrack.getLatestPosts(db);
     blizztrack.getPatchNotes(db);
     blizztrack.getVersion(db);
     raiderIO.getGuildRaidRanking(db);
     raiderIO.getMythicAffixes(db);
     wowProgress.getScore(db);
+    breakingNews.get(db);
     
 
 }).catch(error => {
