@@ -60,31 +60,6 @@ module.exports = {
         });
     }, null, true, 'America/Denver', null, false),
 
-    getLatestPosts: (db) => new CronJob('02 */10 * * * *', () => {
-                
-        axios.get(`https://blizztrack.com/api/forums/world_of_warcraft/latest_post`).then(res => {
-            
-            res.data.Posts.forEach((obj, index) => {
-                obj.category = forumCategory[`${obj.category_id}`];
-
-                if (index === res.data.Posts.length - 1) {
-                    db.wowcache.saveDoc({
-                        id: 12,
-                        cacheType: 'latest posts',
-                        data: res.data,
-                    }).then(response => {
-                        ServicesLogging(db, 'blizztrack wow latest posts', `Data inserted.`);
-                    }).catch(dbError => {
-                        console.log(`Database Insertion Error: Blizztrack WoW Latest Posts Insert Failed.`, dbError);
-                    });
-                }
-            });            
-
-        }).catch(apiError => {
-            ServicesLogging(db, 'blizztrackapi', 'Blizztrack WoW Latest Posts API error.', apiError);
-        });
-    }, null, true, 'America/Denver', null, false),
-
     getBluePosts: (db) => new CronJob('03 */10 * * * *', () => {
                 
         axios.get(`https://blizztrack.com/api/forums/world_of_warcraft/latest_post/blue`).then(res => {
