@@ -7,7 +7,7 @@ module.exports = {
 
     getPatchNotes: (db) => new CronJob('00 */10 * * * *', () => {
                 
-        axios.get(`https://blizztrack.com/feeds/world_of_warcraft/notes/json`).then(res => {
+        axios.get(`https://blizztrack.com/feeds/notes/world_of_warcraft/json`).then(res => {
             
             res.data.items.forEach((obj, index) => {
                 obj.content_html = obj.content_html.replace(new RegExp('<strong>Death Knight</strong>', 'g'), '<strong id="deathKnight">Death Knight</strong>')
