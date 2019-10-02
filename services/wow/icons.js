@@ -5,6 +5,9 @@ const ServicesLogging = require('../../db/dbLogging');
 module.exports = {
     // Every other hour, at 33 minutes past the hour, collect all Item IDs from the icons table. Grabs all icons that we don't already have from Blizzard.
     getItemIcons: (db) => new CronJob('00 33 */2 * * *', () => {
+        ServicesLogging(db, 'iconItems', `Item Icon collection started.`);
+        let addedIcons = [];
+
         db.query('select id from icons').then(response => {
             
             let count = 1;
@@ -26,8 +29,13 @@ module.exports = {
                                 }
 
                                 req.app.get('db').icons.insert(obj).then(dbRes => {
+                                    addedIcons.push(obj.index);
+                                    if (obj.index === 200000) {
+                                        ServicesLogging(db, 'iconItems', `Icon Insertion complete.`, {icons: addedIcons});
+                                    }
                                 }).catch(dbErr => {
-                                    console.log('Database Insert Error -----------------------------------------', dbErr);
+                                    //Log to database an error in inserting data.
+                                    ServicesLogging(db, 'iconItems', `DB insert error.`, dbErr);
                                 });
 
                             }).catch(wowErr => {
@@ -40,11 +48,17 @@ module.exports = {
                                     }
 
                                     req.app.get('db').icons.insert(obj).then(dbRes => {
+                                        addedIcons.push(obj.index);
+                                        if (obj.index === 200000) {
+                                            ServicesLogging(db, 'iconItems', `Icon Insertion complete.`, {icons: addedIcons});
+                                        }
                                     }).catch(dbErr => {
-                                        console.log('Database Insert Error -----------------------------------------', dbErr);
+                                        //Log to database an error in inserting data.
+                                        ServicesLogging(db, 'iconItems', `DB insert error.`, dbErr);
                                     });
                                 } else {
-                                    console.log('WoW API Error -----------------------------------------', wowErr);
+                                    //Log to database an error in collecting data.
+                                    ServicesLogging(db, 'iconItems', `WoW API Error.`, wowErr);
                                 }
 
                             })
@@ -58,9 +72,7 @@ module.exports = {
 
             }
         }).catch(error => {
-            console.log('getItemIcons Error');
-            console.log(error);
-            res.status(500).send('getItemIcons Error');
+            ServicesLogging(db, 'iconItems', `DB fetch error.`, error);
         })
     }, null, true, 'America/Denver', null, false),
 };
