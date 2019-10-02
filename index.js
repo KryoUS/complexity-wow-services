@@ -9,6 +9,7 @@ const blizztrack = require('./services/wow/blizztrack');
 const raiderIO = require('./services/wow/raiderio');
 const wowProgress = require('./services/wow/wowProgress');
 const breakingNews = require('./services/wow/breakingNews');
+const tsm = require('./services/wow/tradeskillmaster');
 
 //Get Massive connection
 getDb().then(db => {
@@ -41,6 +42,8 @@ getDb().then(db => {
     raiderIO.getMythicAffixes(db);
     wowProgress.getScore(db);
     breakingNews.get(db);
+    tsm.get(db);
+    
     
 
 }).catch(error => {
