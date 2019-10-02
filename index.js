@@ -10,6 +10,7 @@ const raiderIO = require('./services/wow/raiderio');
 const wowProgress = require('./services/wow/wowProgress');
 const breakingNews = require('./services/wow/breakingNews');
 const tsm = require('./services/wow/tradeskillmaster');
+const icons = require('./services/wow/icons');
 
 //Get Massive connection
 getDb().then(db => {
@@ -43,6 +44,7 @@ getDb().then(db => {
     wowProgress.getScore(db);
     breakingNews.get(db);
     tsm.get(db);
+    icons.getItemIcons(db);
     
     
 
