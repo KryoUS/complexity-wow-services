@@ -11,13 +11,27 @@ module.exports = {
                 epoch_datetime: new Date().getTime(),
                 alert: res.data.substring(res.data.indexOf('<p>') + 3, res.data.indexOf('</p>') - 1),
             };
-            
-            db.breakingnews.insert(obj).then(response => {
-                ServicesLogging(db, 'breakingNews', `Data inserted.`);
-            }).catch(insertError => {
-                //Log to database an error in inserting data.
-                ServicesLogging(db, 'breakingNews', `DB insert error.`, insertError);
-            });
+
+            if (res.data) {
+                db.breakingnews.findOne({alert: obj.alert}).then(findRes => {
+
+                    if (findRes.id) {
+                        ServicesLogging(db, 'breakingNews', `Alert already exists.`);
+                    } else {
+                        db.breakingnews.insert(obj).then(response => {
+                            ServicesLogging(db, 'breakingNews', `Data inserted.`);
+                        }).catch(insertError => {
+                            //Log to database an error in inserting data.
+                            ServicesLogging(db, 'breakingNews', `DB insert error.`, insertError);
+                        });
+                    }
+                }).catch(findOneError => {
+                    //Log to database an error in searching for a duplicate alert.
+                    ServicesLogging(db, 'breakingNews', `DB FindOne error.`, findOneError);
+                });
+            } else {
+                ServicesLogging(db, 'breakingNews', `No alert present.`);
+            }
 
         }).catch(alertError => {
             ServicesLogging(db, 'breakingNews', `Alert fetch error.`, alertError);
