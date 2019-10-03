@@ -6,7 +6,7 @@ module.exports = {
     // At 50 minutes past the hour, collect data from Auction House items that were on Thunderlord.
     // Then update or insert them as a JSONB object.
     get: (db) => new CronJob('00 50 0-23 * * 0-6', () => {
-        axios.get(`http://api.tradeskillmaster.com/v1/item/US/thunderlord?format=json&apiKey=${process.env.TSM_Key}`).then(res => {
+        axios.get(`https://api.tradeskillmaster.com/v1/item/US/thunderlord?format=json&apiKey=${process.env.TSM_Key}`).then(res => {
             db.saveDocs('auctionhouse', res.data).then(dbRes => {
                 ServicesLogging(db, 'TradeSkillMaster', `Auction House data inserted.`);
             }).catch(insertError => {
