@@ -6,7 +6,7 @@ module.exports = (db, category, message, errorJSON) => {
         epoch_datetime: new Date().getTime(),
         category: category,  
         message: message,
-        error: errorJSON ? JSON.stringify(errorJSON, functions.getCircularReplacer()) : '{}'
+        info: errorJSON ? JSON.stringify(errorJSON, functions.getCircularReplacer()) : '{}'
     }).then(result => {
         //Do nothing with results
     }).catch(error => {
