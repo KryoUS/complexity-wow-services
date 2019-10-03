@@ -3,8 +3,8 @@ const CronJob = require('cron').CronJob;
 const ServicesLogging = require('../../db/dbLogging');
 
 module.exports = {
-    // Every other hour, at 33 minutes past the hour, collect all Item IDs from the icons table. Then grabs all icons that we don't already have from Blizzard.
-    getItemIcons: (db) => new CronJob('00 33 */2 * * *', () => {
+    // Every 6 hours, at 33 minutes past the hour, collect all Item IDs from the icons table. Then grabs all icons that we don't already have from Blizzard.
+    getItemIcons: (db) => new CronJob('00 33 */6 * * *', () => {
         ServicesLogging(db, 'iconItems', `Item Icon collection started.`);
 
         db.query('select id from icons').then(response => {
@@ -40,7 +40,7 @@ module.exports = {
 
                             })
 
-                        }, count * 30);
+                        }, count * 125); //This runs at 8 per second which ends up being 28,800 Blizzard API Calls per hour. (Blizzard cap is 36,000 per hour.)
                     }
 
                     startItemIconCollection(count, i, db);
