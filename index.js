@@ -45,6 +45,7 @@ getDb().then(db => {
     breakingNews.get(db);
     tsm.get(db);
     icons.getItemIcons(db);
+    icons.getSpellIcons(db);
     
     
 
