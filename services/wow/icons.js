@@ -70,7 +70,7 @@ module.exports = {
                 
                         setTimeout(() => {
                             
-                            axios.get(`https://us.api.blizzard.com/wow/spell/280195?locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(res => {
+                            axios.get(`https://us.api.blizzard.com/wow/spell/${index}?locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(res => {
                                 
                                 res.data.iconurl = `https://render-us.worldofwarcraft.com/icons/56/${res.data.icon}.jpg`;
                                 res.data.unix_datetime = new Date().getTime();
