@@ -83,7 +83,7 @@ module.exports = {
                                 });
 
                             }).catch(wowErr => {
-                                if (wowErr.response.status !== 'nok') {
+                                if (wowErr.response.data.status !== 'nok') {
                                     //Log to database an error in collecting data.
                                     ServicesLogging(db, 'iconSpells', `WoW API Error.`, wowErr.response);
                                 }
