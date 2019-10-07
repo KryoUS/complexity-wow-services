@@ -3,14 +3,14 @@ const CronJob = require('cron').CronJob;
 const ServicesLogging = require('../../db/dbLogging');
 
 module.exports = {
-    // Every 6 hours, at 33 minutes past the hour, collect all Item IDs from the icons table. Then grabs all icons that we don't already have from Blizzard.
-    getItemIcons: (db) => new CronJob('00 33 */6 * * *', () => {
+    // Every 2nd day of the month, at 10:33pm (22:33), collect all Item IDs from the icons table. Then grabs all icons that we don't already have from Blizzard.
+    getItemIcons: (db) => new CronJob('00 33 22 */2 * *', () => {
         ServicesLogging(db, 'iconItems', `Item Icon collection started.`);
 
         db.query('select id from icons').then(response => {
             let count = 1;
 
-            for (i = 1; i < 200000; i++) {
+            for (i = 1; i < 400000; i++) {
 
                 if (response.findIndex(x => x.id === i) === -1) {
             
@@ -54,8 +54,8 @@ module.exports = {
     }, null, true, 'America/Denver', null, false),
 
 
-    // Every 6 hours, at 10 minutes past the hour, collect all Spell IDs from the icons table. Then grabs all icons that we don't already have from Blizzard.
-    getSpellIcons: (db) => new CronJob('00 10 */6 * * *', () => {
+    // Every 2nd day of the month, at 10:10pm (22:10), collect all Spell IDs from the icons table. Then grabs all icons that we don't already have from Blizzard.
+    getSpellIcons: (db) => new CronJob('00 10 22 */2 * *', () => {
         
         ServicesLogging(db, 'iconSpells', `Spell Icon collection started.`);
 
