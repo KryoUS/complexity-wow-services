@@ -7,7 +7,10 @@ module.exports = {
     // Then update or insert them as a JSONB object.
     get: (db) => new CronJob('00 50 0-23 * * 0-6', () => {
         axios.get(`https://api.tradeskillmaster.com/v1/item/US/thunderlord?format=json&apiKey=${process.env.TSM_TOKEN}`).then(res => {
-            db.saveDocs('auctionhouse', res.data).then(dbRes => {
+
+            db.saveDocs('auctionhouse', res.data.forEach(obj => {
+                obj.id = obj.Id;
+            })).then(dbRes => {
                 ServicesLogging(db, 'TradeSkillMaster', `Auction House data inserted.`);
             }).catch(insertError => {
                 //Log to database an error in inserting data.
