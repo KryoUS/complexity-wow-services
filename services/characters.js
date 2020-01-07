@@ -53,7 +53,8 @@ module.exports = {
                             axios.get(`https://us.api.blizzard.com/wow/character/${upsertObj.character.realm}/${encodeURI(upsertObj.character.name)}?fields=items%2C%20statistics&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(statRes => {
                                 
                                 let raider = 0;
-                                if (rank <= 3 && upsertObj.character.name != 'Theeotown' && upsertObj.character.name != 'Glacial' && upsertObj.character.name != 'Hopelessly' && upsertObj.character.name != 'Tanzia' && upsertObj.character.name != 'Rubyeyes' && upsertObj.character.name != 'Cheezyjr') {
+                                // && upsertObj.character.name != 'Theeotown' && upsertObj.character.name != 'Glacial' && upsertObj.character.name != 'Hopelessly' && upsertObj.character.name != 'Tanzia' && upsertObj.character.name != 'Rubyeyes' && upsertObj.character.name != 'Cheezyjr'
+                                if (rank <= 3) {
                                     raider = 1;
                                 }
 
