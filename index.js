@@ -11,6 +11,7 @@ const wowProgress = require('./services/wow/wowProgress');
 const breakingNews = require('./services/wow/breakingNews');
 const tsm = require('./services/wow/tradeskillmaster');
 const icons = require('./services/wow/icons');
+const warcraftlogs = require('./services/wow/warcraftlogs');
 
 //Get Massive connection
 getDb().then(db => {
@@ -46,6 +47,7 @@ getDb().then(db => {
     tsm.get(db);
     icons.getItemIcons(db);
     icons.getSpellIcons(db);
+    warcraftlogs.getLogs(db);
     
     
 
