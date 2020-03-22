@@ -1,6 +1,9 @@
 const axios = require('axios');
+const axiosRetry = require('axios-retry');
 const CronJob = require('cron').CronJob;
 const CharacterCronLogging = require('../db/dbLogging');
+
+axiosRetry(axios, { retries: 3 });
 
 module.exports = {
     setBlizzardToken: (db) => new CronJob('00 0 */1 * * *', () => {
@@ -18,6 +21,7 @@ module.exports = {
             }
     
             process.env.BLIZZ_TOKEN = response.data.access_token;
+
         }).catch(wowTokenFetchError => {
             CharacterCronLogging(db, 'blizzardapi', 'API Error', wowTokenFetchError);
         });
