@@ -1,27 +1,11 @@
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
 const ServicesLogging = require('../../db/dbLogging');
+const achievements = require('../wow/achievements');
 
 module.exports = {
 
-    getAchievements: (db) => new CronJob('01 25 0-23 * * 0-6', () => {
-                
-        axios.get(`https://us.api.blizzard.com/wow/data/character/achievements?locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(res => {
-            
-            db.wowcache.saveDoc({
-                id: 1,
-                cacheType: 'achievements',
-                data: res.data,
-            }).then(response => {
-                ServicesLogging(db, 'achievements', `Data inserted.`);
-            }).catch(dbError => {
-                console.log(`Database Insertion Error: Achievements Insert Failed.`, dbError);
-            });
-
-        }).catch(apiError => {
-            ServicesLogging(db, 'blizzardapi', 'Achievements API error.', apiError);
-        });
-    }, null, true, 'America/Denver', null, false),
+    achievements: achievements,
 
     getBattlegroups: (db) => new CronJob('02 25 0-23 * * 0-6', () => {
                 
