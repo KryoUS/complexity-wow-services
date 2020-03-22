@@ -26,17 +26,17 @@ getDb().then(db => {
 
     //Starts Cron (This is necessary and the Cron will not run until the specified time)
     blizzardApi.setBlizzardToken(db);
-    wowGuildCharacters.get(db);
-    wowGuildCharacters.cleanup(db);
+    wow.achievements.getAchievements(db);
+    // wowGuildCharacters.get(db);
+    // wowGuildCharacters.cleanup(db);
     simulationcraft.get(db);
-    wow.getAchievements(db);
-    wow.getBattlegroups(db);
-    wow.getBosses(db);
-    wow.getClasses(db);
-    wow.getMounts(db);
-    wow.getPetTypes(db);
-    wow.getPets(db);
-    wow.getRaces(db);
+    // wow.getBattlegroups(db);
+    // wow.getBosses(db);
+    // wow.getClasses(db);
+    // wow.getMounts(db);
+    // wow.getPetTypes(db);
+    // wow.getPets(db);
+    // wow.getRaces(db);
     blizztrack.getBluePosts(db);
     blizztrack.getPatchNotes(db);
     blizztrack.getVersion(db);
@@ -44,9 +44,9 @@ getDb().then(db => {
     raiderIO.getMythicAffixes(db);
     wowProgress.getScore(db);
     breakingNews.get(db);
-    tsm.get(db);
-    icons.getItemIcons(db);
-    icons.getSpellIcons(db);
+    // tsm.get(db);
+    // icons.getItemIcons(db);
+    // icons.getSpellIcons(db);
     warcraftlogs.getLogs(db);
     
     
