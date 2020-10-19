@@ -5,7 +5,6 @@ const blizzardApi = require('./services/token');
 const simulationcraft = require('./services/simulationcraft');
 const wowGuildCharacters = require('./services/characters');
 const wow = require('./services/wow/dataResources');
-const blizztrack = require('./services/wow/blizztrack');
 const raiderIO = require('./services/wow/raiderio');
 const wowProgress = require('./services/wow/wowProgress');
 const breakingNews = require('./services/wow/breakingNews');
@@ -26,7 +25,7 @@ getDb().then(db => {
 
     //Starts Cron (This is necessary and the Cron will not run until the specified time)
     blizzardApi.setBlizzardToken(db);
-    wow.achievements.getAchievements(db);
+    // wow.achievements.getAchievements(db);
     // wowGuildCharacters.get(db);
     // wowGuildCharacters.cleanup(db);
     simulationcraft.get(db);
@@ -37,9 +36,6 @@ getDb().then(db => {
     // wow.getPetTypes(db);
     // wow.getPets(db);
     // wow.getRaces(db);
-    blizztrack.getBluePosts(db);
-    blizztrack.getPatchNotes(db);
-    blizztrack.getVersion(db);
     raiderIO.getGuildRaidRanking(db);
     raiderIO.getMythicAffixes(db);
     wowProgress.getScore(db);
