@@ -2,7 +2,7 @@ const massive = require('massive');
 
 let db;
 
-exports = module.exports = function () {
+exports = module.exports = async () => {
   if (db) {
     return db;
   }
@@ -13,7 +13,8 @@ exports = module.exports = function () {
     database: process.env.PGDATABASE,
     user: process.env.PGUSER,
     password: process.env.PGPASSWORD,
-    ssl: true
+    ssl: { rejectUnauthorized: false },
+    poolsize: 25
 }).then(instance => {
     db = instance;
 
