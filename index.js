@@ -1,5 +1,5 @@
 require('dotenv').config();
-const ServicesLogging = require('./db/dbLogging');
+const ServicesLogging = require('./db/dbLogging').servicesLogging;
 const getDb = require('./db/db');
 const blizzardApi = require('./services/token');
 const simulationcraft = require('./services/simulationcraft');
