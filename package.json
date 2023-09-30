@@ -4,11 +4,12 @@
   "description": "Web Services to collect World of Warcraft data and cache them in a PostgreSQL database.",
   "main": "characters.js",
   "dependencies": {
-    "axios": "^0.19.2",
-    "axios-retry": "^3.1.2",
+    "axios": "^0.24.0",
+    "axios-rate-limit": "^1.3.0",
+    "axios-retry": "^3.2.4",
     "cron": "^1.8.2",
-    "dotenv": "^8.2.0",
-    "massive": "^5.11.2"
+    "dotenv": "^8.6.0",
+    "massive": "^6.10.2"
   },
   "devDependencies": {},
   "scripts": {
