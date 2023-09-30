@@ -7,10 +7,13 @@ const wowGuildCharacters = require('./services/characters');
 const wow = require('./services/wow/dataResources');
 const raiderIO = require('./services/wow/raiderio');
 const wowProgress = require('./services/wow/wowProgress');
-const breakingNews = require('./services/wow/breakingNews');
+// const breakingNews = require('./services/wow/breakingNews');
 const tsm = require('./services/wow/tradeskillmaster');
 const icons = require('./services/wow/icons');
 const warcraftlogs = require('./services/wow/warcraftlogs');
+const getChars = require('./services/characterTest');
+const characterTest = require('./services/characterTest');
+console.log('Starting...')
 
 //Get Massive connection
 getDb().then(db => {
@@ -21,14 +24,15 @@ getDb().then(db => {
     return Promise.resolve();
 }).then(() => {
     // retrieve the already-connected instance synchronously
-    const db = getDb();    
+    const db = getDb();
 
     //Starts Cron (This is necessary and the Cron will not run until the specified time)
-    blizzardApi.setBlizzardToken(db);
+    // characterTest(db);
+    // blizzardApi.setBlizzardToken(db);
     // wow.achievements.getAchievements(db);
     // wowGuildCharacters.get(db);
     // wowGuildCharacters.cleanup(db);
-    simulationcraft.get(db);
+    // simulationcraft.get(db);
     // wow.getBattlegroups(db);
     // wow.getBosses(db);
     // wow.getClasses(db);
@@ -36,14 +40,14 @@ getDb().then(db => {
     // wow.getPetTypes(db);
     // wow.getPets(db);
     // wow.getRaces(db);
-    raiderIO.getGuildRaidRanking(db);
-    raiderIO.getMythicAffixes(db);
-    wowProgress.getScore(db);
-    breakingNews.get(db);
+    // raiderIO.getGuildRaidRanking(db);
+    // raiderIO.getMythicAffixes(db);
+    // wowProgress.getScore(db);
+    // breakingNews.get(db);
     // tsm.get(db);
     // icons.getItemIcons(db);
     // icons.getSpellIcons(db);
-    warcraftlogs.getLogs(db);
+    // warcraftlogs.getLogs(db);
     
     
 
