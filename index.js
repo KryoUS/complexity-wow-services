@@ -1,5 +1,5 @@
 require('dotenv').config();
-const ServicesLogging = require('./db/dbLogging').servicesLogging;
+const ServicesLogging = require('./db/dbLogging').ServicesLogging;
 const getDb = require('./db/db');
 const blizzardApi = require('./services/token');
 const simulationcraft = require('./services/simulationcraft');
@@ -18,7 +18,7 @@ console.log('Starting...')
 //Get Massive connection
 getDb().then(db => {
     //Log Database Connection
-    ServicesLogging(db, 'database', 'Database Connected');
+    ServicesLogging('database', 'Database Connected');
 
     // don't pass the instance
     return Promise.resolve();
