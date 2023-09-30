@@ -1,32 +1,35 @@
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
-const ServicesLogging = require('../../db/dbLogging');
+const getDb = require('../../db/db');
+const ServicesLogging = require('../../db/dbLogging').servicesLogging;
 
 let wowAPIVersion = '';
 
 module.exports = {
 
-    getAchievements: (db) => new CronJob('1 */15 * * * *', () => {
-        ServicesLogging(db, 'achievements', `Achievements collection started.`);
+    getAchievements: () => new CronJob('1 */15 * * * *', async () => {
+
+        ServicesLogging('achievements', `Achievements collection started.`);
         //Get Achievements Index
         axios.get(`https://us.api.blizzard.com/data/wow/achievement-category/index?namespace=static-us&locale=en_US&access_token=${process.env.BLIZZ_TOKEN}`).then(achieveCatIndex => {
-            ServicesLogging(db, 'achievements', `Achievements Index API responded.`);
+            ServicesLogging('achievements', `Achievements Index API responded.`);
 
             if (wowAPIVersion !== achieveCatIndex.headers['battlenet-namespace']) {
             
-                ServicesLogging(db, 'achievements', `Header does not match known version! Setting version and collecting achievements.`, {current: wowAPIVersion, new: achieveCatIndex.headers['battlenet-namespace']});
+                ServicesLogging('achievements', `Header does not match known version! Setting version and collecting achievements.`, {current: wowAPIVersion, new: achieveCatIndex.headers['battlenet-namespace']});
             
                 wowAPIVersion = achieveCatIndex.headers['battlenet-namespace'];
 
                 let { categories } = achieveCatIndex.data;
                 let lastCatIndex = categories.length - 1;
+                const db = getDb();
 
                 db.wowcache.saveDoc({
                     id: 1,
                     cacheType: 'achievements',
                     data: achieveCatIndex.data,
                 }).then(achieveIndexDBRes => {
-                    ServicesLogging(db, 'achievements', `Achievements Index Inserted.`);
+                    ServicesLogging('achievements', `Achievements Index Inserted.`);
                 }).catch(achieveIndexDBError => {
                     console.log(`Database Insertion Error: Achievements Index Insert Failed.`, {error: JSON.stringify(achieveIndexDBError)});
                 });
@@ -50,7 +53,7 @@ module.exports = {
                                     //TODO: This isn't very accurate and needs to be improved upon.
                                 if (catIndex === lastCatIndex) {
                                     lastCategory = true;
-                                    ServicesLogging(db, 'achievements', `Category collection complete.`);
+                                    ServicesLogging('achievements', `Category collection complete.`);
                                 };
 
                                 //Check for achievements under the category
@@ -76,26 +79,26 @@ module.exports = {
                                                         db.saveDoc('achievements', achieveDetail.data).then(response => {
 
                                                         }).catch(dbAchievementsError => {
-                                                            ServicesLogging(db, 'database', 'Achievements update error.', {error: JSON.stringify(dbAchievementsError)});
+                                                            ServicesLogging('database', 'Achievements update error.', {error: JSON.stringify(dbAchievementsError)});
                                                         });
 
                                                         //Check for last achievement of the category, then log to DB.
                                                         if (achieveIndex === lastAchieveIndex) {
                                                             
-                                                            ServicesLogging(db, 'achievements', `Category "${achieveDetail.data.category.name}" Achievements collection complete.`);
+                                                            ServicesLogging('achievements', `Category "${achieveDetail.data.category.name}" Achievements collection complete.`);
                                                             
                                                             //Check for the completion of the last category of the last achievement.
                                                                 //TODO: Not very accurate and needs to be improved.
                                                             if (lastCategory) {
-                                                                ServicesLogging(db, 'achievements', `Achievements collection completed.`);
+                                                                ServicesLogging('achievements', `Achievements collection completed.`);
                                                             };
                                                         };
                                                     }).catch(achieveMediaError => {
-                                                        ServicesLogging(db, 'blizzardapi', 'Achievement Detail Media API error.', achieveMediaError.response);
+                                                        ServicesLogging('blizzardapi', 'Achievement Detail Media API error.', achieveMediaError.response);
                                                     });
 
                                                 }).catch(achieveDetailError => {
-                                                    ServicesLogging(db, 'blizzardapi', 'Achievement Detail API error.', achieveDetailError.response);
+                                                    ServicesLogging('blizzardapi', 'Achievement Detail API error.', achieveDetailError.response);
                                                 });
                                             }, 1000 * achieveIndex); //This runs at 1 per second which ends up being 3,600 Blizzard API Calls per hour. (Blizzard cap is 36,000 per hour.)
 
@@ -109,7 +112,7 @@ module.exports = {
                                 }
 
                             }).catch(achievementCatDetailError => {
-                                ServicesLogging(db, 'blizzardapi', 'Achievement Category Detail API error.', achievementCatDetailError.response);
+                                ServicesLogging('blizzardapi', 'Achievement Category Detail API error.', achievementCatDetailError.response);
                             })
 
                         }, 1000 * catIndex); //This runs at 1 per second which ends up being 3,600 Blizzard API Calls per hour. (Blizzard cap is 36,000 per hour.)
@@ -121,11 +124,11 @@ module.exports = {
                 });
 
             } else {
-                ServicesLogging(db, 'achievements', `Header matches known version. Skipping achievement collection.`);
+                ServicesLogging('achievements', `Header matches known version. Skipping achievement collection.`);
             };
 
         }).catch(achievementCatIndexAPIError => {
-            ServicesLogging(db, 'blizzardapi', 'Achievement Category Index API error.', achievementCatIndexAPIError.response);
+            ServicesLogging('blizzardapi', 'Achievement Category Index API error.', achievementCatIndexAPIError.response);
         });
     }, null, true, 'America/Denver', null, false),
 };

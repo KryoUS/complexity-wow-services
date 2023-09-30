@@ -1,6 +1,6 @@
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
-const ServicesLogging = require('../../db/dbLogging');
+const ServicesLogging = require('../../db/dbLogging').servicesLogging;
 
 module.exports = {
     // Every hour, at 33 minutes past the hour, find the highest icon ID we have and start requesting up to 10,000 new ones.

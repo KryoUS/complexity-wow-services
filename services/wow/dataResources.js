@@ -1,6 +1,6 @@
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
-const ServicesLogging = require('../../db/dbLogging');
+const ServicesLogging = require('../../db/dbLogging').servicesLogging;
 const achievements = require('../wow/achievements');
 
 module.exports = {

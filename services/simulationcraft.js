@@ -1,6 +1,6 @@
 const axios = require('axios');
 const CronJob = require('cron').CronJob;
-const ServicesLogging = require('../db/dbLogging');
+const ServicesLogging = require('../db/dbLogging').servicesLogging;
 
 module.exports = {
     get: (db) => new CronJob('00 00 04 * * *', () => {
