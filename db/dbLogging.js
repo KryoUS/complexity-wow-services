@@ -2,7 +2,7 @@ const getDb = require('./db');
 const functions = require('../tools/functions');
 
 module.exports = {
-    servicesLogging: async (category, message, errorJSON) => {
+    ServicesLogging: async (category, message, errorJSON) => {
 
         let db = await getDb();
 
@@ -14,7 +14,7 @@ module.exports = {
         }).then(result => {
             //Do nothing with results
         }).catch(error => {
-            console.log(`${new Date()} Massive.js CharacterCronLogging Insert Error = `, error);
+            console.log(`${new Date()} Massive.js ServicesLogging Insert Error = `, error);
         })
     },
 
